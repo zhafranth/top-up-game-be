@@ -107,31 +107,30 @@ router.get('/:id', getProductById);
  *             type: object
  *             required:
  *               - name
- *               - description
  *               - price
- *               - category
+ *               - total_diamond
  *             properties:
  *               name:
  *                 type: string
  *                 description: Nama produk
- *               description:
- *                 type: string
- *                 description: Deskripsi produk
+ *                 minLength: 1
  *               price:
- *                 type: number
- *                 format: decimal
- *                 description: Harga produk
- *               category:
- *                 type: string
- *                 description: Kategori produk
- *               isActive:
- *                 type: boolean
- *                 default: true
- *                 description: Status aktif produk
- *               popularity:
  *                 type: integer
- *                 default: 0
- *                 description: Tingkat popularitas
+ *                 description: Harga produk (dalam rupiah)
+ *                 minimum: 1
+ *               total_diamond:
+ *                 type: integer
+ *                 description: Jumlah diamond yang didapat
+ *                 minimum: 1
+ *               discount:
+ *                 type: integer
+ *                 description: Persentase diskon (0-100)
+ *                 minimum: 0
+ *                 maximum: 100
+ *               is_populer:
+ *                 type: boolean
+ *                 description: Apakah produk populer
+ *                 default: false
  *     responses:
  *       201:
  *         description: Produk berhasil dibuat
@@ -183,17 +182,24 @@ router.post('/', authenticateToken, validate(createProductSchema), createProduct
  *             properties:
  *               name:
  *                 type: string
- *               description:
- *                 type: string
+ *                 description: Nama produk
+ *                 minLength: 1
  *               price:
- *                 type: number
- *                 format: decimal
- *               category:
- *                 type: string
- *               isActive:
- *                 type: boolean
- *               popularity:
  *                 type: integer
+ *                 description: Harga produk (dalam rupiah)
+ *                 minimum: 1
+ *               total_diamond:
+ *                 type: integer
+ *                 description: Jumlah diamond yang didapat
+ *                 minimum: 1
+ *               discount:
+ *                 type: integer
+ *                 description: Persentase diskon (0-100)
+ *                 minimum: 0
+ *                 maximum: 100
+ *               is_populer:
+ *                 type: boolean
+ *                 description: Apakah produk populer
  *     responses:
  *       200:
  *         description: Produk berhasil diupdate

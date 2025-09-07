@@ -65,32 +65,28 @@ const options = {
               type: 'string',
               description: 'Nama produk'
             },
-            description: {
-              type: 'string',
-              description: 'Deskripsi produk'
-            },
             price: {
-              type: 'number',
-              format: 'decimal',
-              description: 'Harga produk'
-            },
-            category: {
-              type: 'string',
-              description: 'Kategori produk'
-            },
-            isActive: {
-              type: 'boolean',
-              description: 'Status aktif produk'
-            },
-            popularity: {
               type: 'integer',
-              description: 'Tingkat popularitas produk'
+              description: 'Harga produk dalam rupiah'
             },
-            createdAt: {
+            discount: {
+              type: 'integer',
+              description: 'Persentase diskon (0-100)',
+              nullable: true
+            },
+            is_populer: {
+              type: 'boolean',
+              description: 'Status popularitas produk'
+            },
+            total_diamond: {
+              type: 'integer',
+              description: 'Jumlah diamond yang didapat'
+            },
+            created_at: {
               type: 'string',
               format: 'date-time'
             },
-            updatedAt: {
+            updated_at: {
               type: 'string',
               format: 'date-time'
             }
