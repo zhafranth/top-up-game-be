@@ -24,13 +24,14 @@ model Product {
 }
 
 model Transaction {
-  id           Int               @id @default(autoincrement())
-  total_diamond Int
-  total_amount Int
-  status       TransactionStatus @default(pending)
-  no_wa        String
-  created_at   DateTime          @default(now())
-  updated_at   DateTime          @updatedAt
+  id                      Int               @id @default(autoincrement())
+  merchant_transaction_id String            @unique @db.VarChar(64)
+  total_diamond           Int
+  total_amount            Int
+  status                  TransactionStatus @default(pending)
+  no_wa                   String
+  created_at              DateTime          @default(now())
+  updated_at              DateTime          @updatedAt
 
   @@map("transactions")
 }
