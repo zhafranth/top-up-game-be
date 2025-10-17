@@ -1,0 +1,67 @@
+name: Deploy Backend to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧩 Checkout repository
+        uses: actions/checkout@v3
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+
+      - name: 📦 Install dependencies
+        run: |
+          yarn install --frozen-lockfile
+          # Jika kamu punya script build, aktifkan baris di bawah:
+          # yarn build
+
+      - name: 🗜️ Archive project files
+        run: tar -czf backend.tar.gz ./*
+
+      - name: 🚚 Upload build to VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "backend.tar.gz"
+          target: "~/"
+
+      - name: 🚀 Deploy on VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            echo "🚀 Starting backend deployment..."
+            cd /root/top-up-game-be
+
+            echo "📦 Extracting new build..."
+            rm -rf old || true
+            mv src old || true
+
+            tar -xzf ~/backend.tar.gz -C .
+            rm ~/backend.tar.gz
+
+            echo "📦 Installing production dependencies..."
+            yarn install --production --frozen-lockfile
+
+            echo "🔁 Restarting PM2 process..."
+            pm2 restart be-topup || pm2 start server.js --name be-topup
+            pm2 save
+
+            echo "🔄 Reloading Nginx..."
+            nginx -t && systemctl reload nginx
+
+            echo "✅ Backend deployed successfully!"
