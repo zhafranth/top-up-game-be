@@ -26,9 +26,7 @@ jobs:
           # yarn build
 
       - name: 🗜️ Archive project files
-        run: |
-          tar -czf backend.tar.gz \
-            package.json yarn.lock prisma src server.js
+        run: tar --exclude='./node_modules' --exclude='./.git' -czf backend.tar.gz ./
 
       - name: 🚚 Upload build to VPS
         uses: appleboy/scp-action@master
