@@ -8,28 +8,24 @@ const checkNickname = async (req, res) => {
       return res.status(400).json({ error: "Target parameter is required" });
     }
 
-    const payload = {
+    const params = {
       api_key: "Fk5RMK5r310zsxF6mEOUBYC3RLVYF4Tt",
       action: "get-nickname-game",
       layanan: "ROYALDREAM",
       target: target,
     };
 
-    // console.log("payload", payload);
-    const formData = new FormData();
-    formData.append("api_key", "Fk5RMK5r310zsxF6mEOUBYC3RLVYF4Tt");
-    formData.append("action", "get-nickname-game");
-    formData.append("layanan", "ROYALDREAM");
-    formData.append("target", target);
-
-    const response = await axios.request({
+    console.log("Sending request with params:", params);
+    
+    const response = await axios({
       method: "GET",
       url: "https://ariepulsa.my.id/api/game.php",
-      // headers: {
-      //   "Content-Type": "multipart/form-data",
-      // },
-      // data: formData,
-      params: payload,
+      params: params,
+      headers: {
+        "Accept": "application/json",
+        "User-Agent": "TopUpGames/1.0"
+      },
+      timeout: 30000 // 30 seconds timeout
     });
 
     res.json(response.data);
