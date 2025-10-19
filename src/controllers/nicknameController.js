@@ -12,7 +12,7 @@ const checkNickname = async (req, res) => {
       api_key: "Fk5RMK5r310zsxF6mEOUBYC3RLVYF4Tt",
       action: "get-nickname-game",
       layanan: "ROYALDREAM",
-      target: 444666,
+      target: target,
     };
 
     // console.log("payload", payload);
@@ -23,12 +23,13 @@ const checkNickname = async (req, res) => {
     formData.append("target", target);
 
     const response = await axios.request({
-      method: "POST",
-      url: "https://ariepulsa.my.id/api/get-nickname-game",
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-      data: formData,
+      method: "GET",
+      url: "https://ariepulsa.my.id/api/game.php",
+      // headers: {
+      //   "Content-Type": "multipart/form-data",
+      // },
+      // data: formData,
+      params: payload,
     });
 
     res.json(response.data);
