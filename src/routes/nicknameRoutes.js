@@ -18,7 +18,7 @@ const setLongTimeout = (req, res, next) => {
 /**
  * @swagger
  * /nickname/check:
- *   get:
+ *   post:
  *     summary: Check nickname dari third-party API
  *     tags: [Nickname]
  *     parameters:
@@ -74,6 +74,6 @@ const setLongTimeout = (req, res, next) => {
  *                   type: string
  *                   example: "Internal server error"
  */
-router.get("/check", setLongTimeout, checkNickname);
+router.post("/check", setLongTimeout, checkNickname);
 
 module.exports = router;
