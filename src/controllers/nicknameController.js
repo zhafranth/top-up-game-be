@@ -141,10 +141,135 @@ const checkNickname = async (req, res) => {
       
       if (error.response) {
         // Third-party API error
+        console.error("Third-party API error details:", {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+          headers: error.response.headers
+        });
+        
+        // Jika status 403, kemungkinan masalah dengan IP whitelist
+        if (error.response.status === 403) {
+          return res.status(403).json({
+            error: "API Access Forbidden",
+            message: "Akses ke API eksternal ditolak. Kemungkinan penyebab: IP server tidak di-whitelist atau format request tidak sesuai.",
+            details: {
+              status: error.response.status,
+              data: error.response.data || {},
+              suggestion: "Pastikan IP server sudah di-whitelist oleh penyedia API. Jika sudah, coba hubungi penyedia API untuk informasi lebih lanjut."
+            }
+          });
+        }
+        
+        // Jika status 401, kemungkinan masalah dengan API key
+        if (error.response.status === 401) {
+          return res.status(401).json({
+            error: "API Authentication Failed",
+            message: "Autentikasi ke API eksternal gagal. Kemungkinan API key tidak valid atau sudah kadaluarsa.",
+            details: {
+              status: error.response.status,
+              data: error.response.data || {},
+              suggestion: "Periksa kembali API key dan pastikan masih valid. Jika perlu, minta API key baru dari penyedia API."
+            }
+          });
+        }
+        
+        // Jika status 400, kemungkinan format request tidak sesuai
+        if (error.response.status === 400) {
+          return res.status(400).json({
+            error: "Invalid Request Format",
+            message: "Format request ke API eksternal tidak valid. Parameter atau nilai yang dikirim mungkin tidak sesuai dengan yang diharapkan.",
+            details: {
+              status: error.response.status,
+              data: error.response.data || {},
+              suggestion: "Periksa dokumentasi API untuk memastikan format request yang benar. Pastikan semua parameter wajib sudah disertakan dengan nilai yang valid."
+            }
+          });
+        }
+        
+        // Jika status 429, terlalu banyak request
+        if (error.response.status === 429) {
+          return res.status(429).json({
+            error: "Rate Limit Exceeded",
+            message: "Terlalu banyak request ke API eksternal dalam waktu singkat. Harap coba lagi nanti.",
+            details: {
+              status: error.response.status,
+              data: error.response.data || {},
+              suggestion: "Tunggu beberapa saat sebelum mencoba kembali. Pertimbangkan untuk mengurangi frekuensi request ke API."
+            }
+          });
+        }
+        
+        // Jika status 500, error internal dari API eksternal
+        if (error.response.status === 500) {
+          return res.status(502).json({
+            error: "External API Server Error",
+            message: "API eksternal mengalami masalah internal. Ini bukan kesalahan dari aplikasi kita.",
+            details: {
+              status: error.response.status,
+              data: error.response.data || {},
+              suggestion: "Coba lagi nanti. Jika masalah berlanjut, hubungi penyedia API untuk informasi lebih lanjut."
+            }
+          });
+        }
+        
+        // Jika status 404, endpoint atau resource tidak ditemukan
+        if (error.response.status === 404) {
+          return res.status(404).json({
+            error: "Resource Not Found",
+            message: "Endpoint API atau resource yang diminta tidak ditemukan.",
+            details: {
+              status: error.response.status,
+              data: error.response.data || {},
+              suggestion: "Periksa kembali URL endpoint API dan parameter yang digunakan. Pastikan endpoint masih tersedia di dokumentasi API terbaru."
+            }
+          });
+        }
+        
+        // Jika status 502, bad gateway
+        if (error.response.status === 502) {
+          return res.status(502).json({
+            error: "Bad Gateway",
+            message: "Server API eksternal tidak dapat dijangkau atau tidak merespons dengan benar.",
+            details: {
+              status: error.response.status,
+              data: error.response.data || {},
+              suggestion: "Coba lagi nanti. Kemungkinan ada masalah jaringan atau server API eksternal sedang down."
+            }
+          });
+        }
+        
+        // Jika status 504, gateway timeout
+        if (error.response.status === 504) {
+          return res.status(504).json({
+            error: "Gateway Timeout",
+            message: "Server API eksternal tidak merespons dalam waktu yang ditentukan.",
+            details: {
+              status: error.response.status,
+              data: error.response.data || {},
+              suggestion: "Coba lagi nanti. Server API eksternal mungkin sedang sibuk atau ada masalah jaringan."
+            }
+          });
+        }
+        
+        // Log error response untuk debugging
+        console.log('Third-party API error details:', {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+          headers: error.response.headers
+        });
+        
         return res.status(error.response.status).json({
           error: "Third-party API error",
           message: error.response.data?.message || "Unknown error from third-party API",
-          details: `Status code: ${error.response.status}`,
+          details: {
+            status: error.response.status,
+            statusText: error.response.statusText,
+            data: error.response.data || {},
+            endpoint: error.config?.url || 'unknown',
+            method: error.config?.method?.toUpperCase() || 'unknown'
+          }
         });
       }
       
@@ -154,6 +279,85 @@ const checkNickname = async (req, res) => {
           error: "Service unavailable",
           message: "Unable to connect to third-party service",
           details: error.message,
+        });
+      }
+      
+      if (error.code === 'ECONNABORTED') {
+        // Timeout error
+        console.log('Timeout error details:', {
+          code: error.code,
+          message: error.message,
+          config: {
+            url: error.config?.url,
+            method: error.config?.method,
+            timeout: error.config?.timeout
+          }
+        });
+        
+        return res.status(504).json({
+          error: "Gateway Timeout",
+          message: "Request timeout. API eksternal tidak merespons dalam waktu yang ditentukan (30 detik).",
+          details: {
+            code: error.code,
+            suggestion: "Coba lagi nanti. Server API eksternal mungkin sedang sibuk atau ada masalah jaringan."
+          }
+        });
+      } else if (error.code === 'ECONNREFUSED') {
+        // Connection refused error
+        console.log('Connection refused error details:', {
+          code: error.code,
+          message: error.message,
+          config: {
+            url: error.config?.url,
+            method: error.config?.method
+          }
+        });
+        
+        return res.status(503).json({
+          error: "Service Unavailable",
+          message: "Koneksi ke API eksternal ditolak. Server API mungkin sedang down atau tidak menerima koneksi.",
+          details: {
+            code: error.code,
+            suggestion: "Coba lagi nanti. Jika masalah berlanjut, hubungi penyedia API."
+          }
+        });
+      } else if (error.code === 'ENOTFOUND') {
+        // DNS resolution failed
+        console.log('DNS resolution failed error details:', {
+          code: error.code,
+          message: error.message,
+          config: {
+            url: error.config?.url,
+            method: error.config?.method
+          }
+        });
+        
+        return res.status(503).json({
+          error: "Service Unavailable",
+          message: "Domain API eksternal tidak dapat ditemukan. Kemungkinan ada masalah DNS atau domain tidak valid.",
+          details: {
+            code: error.code,
+            suggestion: "Periksa kembali URL API. Jika URL sudah benar, kemungkinan ada masalah dengan DNS atau server domain."
+          }
+        });
+      } else if (error.code === 'ETIMEDOUT' || error.code === 'ESOCKETTIMEDOUT') {
+        // Connection timeout
+        console.log('Connection timeout error details:', {
+          code: error.code,
+          message: error.message,
+          config: {
+            url: error.config?.url,
+            method: error.config?.method
+          }
+        });
+        
+        return res.status(504).json({
+          error: "Gateway Timeout",
+          message: "Koneksi ke API eksternal timeout. Server tidak merespons dalam waktu yang ditentukan.",
+          details: {
+            code: error.code,
+            suggestion: "Coba lagi nanti. Server API eksternal mungkin sedang sibuk atau ada masalah jaringan."
+          }
         });
       }
       
