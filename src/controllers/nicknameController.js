@@ -20,7 +20,7 @@ const checkNickname = async (req, res) => {
     formData.append("api_key", "Fk5RMK5r310zsxF6mEOUBYC3RLVYF4Tt");
     formData.append("action", "get-nickname-game");
     formData.append("layanan", "ROYALDREAM");
-    formData.append("target", "444666");
+    formData.append("target", target);
 
     const response = await axios.request({
       method: "POST",
