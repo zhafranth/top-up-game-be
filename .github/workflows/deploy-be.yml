@@ -27,15 +27,15 @@ jobs:
       - name: 🗜️ Archive project files
         run: tar -czf backend.tar.gz ./*
 
-      - name: 🚚 Upload build to VPS
-        uses: appleboy/scp-action@master
+      - name: 🚚 Upload build to VPS (with progress)
+        uses: burnett01/rsync-deployments@5.2
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "backend.tar.gz"
-          target: "~/backend.tar.gz"
-          use_insecure_cipher: true
+          switches: -avz --progress
+          path: ./backend.tar.gz
+          remote_path: /root/backend.tar.gz
+          remote_host: ${{ secrets.SERVER_IP }}
+          remote_user: ${{ secrets.SERVER_USER }}
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: 🚀 Deploy on VPS
         uses: appleboy/ssh-action@master
