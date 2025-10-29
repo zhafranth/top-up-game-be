@@ -25,7 +25,11 @@ jobs:
           # yarn build
 
       - name: 🗜️ Archive project files
-        run: tar -czf backend.tar.gz ./*
+        run: |
+          tar --exclude='./node_modules' \
+          --exclude='./.git' \
+          --exclude='./.github' \
+          -czf backend.tar.gz ./
 
       - name: 🚚 Upload build to VPS (with progress)
         uses: burnett01/rsync-deployments@5.2
