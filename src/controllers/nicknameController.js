@@ -14,6 +14,10 @@ const checkNickname = async (req, res) => {
     const action = "get-nickname-game";
     const layanan = "ROYALDREAM";
 
+    console.log("apiKey:", apiKey);
+    console.log("action:", action);
+    console.log("layanan:", layanan);
+
     // Log informasi request
     console.log("Checking nickname for target:", target);
 
@@ -32,7 +36,7 @@ const checkNickname = async (req, res) => {
 
       response = await axios({
         method: "POST",
-        url: "https://ariepulsa.my.id/api/game.php",
+        url: "https://ariepulsa.my.id/api/get-nickname-game",
         data: formData,
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -87,7 +91,7 @@ const checkNickname = async (req, res) => {
 
           response = await axios({
             method: "POST",
-            url: "https://ariepulsa.my.id/api/game.php",
+            url: "https://ariepulsa.my.id/api/get-nickname-game",
             data: jsonData,
             headers: {
               "Content-Type": "application/json",
@@ -157,21 +161,6 @@ const checkNickname = async (req, res) => {
           headers: error.response.headers,
         });
 
-        // Jika status 403, kemungkinan masalah dengan IP whitelist
-        if (error.response.status === 403) {
-          return res.status(403).json({
-            error: "API Access Forbidden",
-            message:
-              "Akses ke API eksternal ditolak. Kemungkinan penyebab: IP server tidak di-whitelist atau format request tidak sesuai.",
-            details: {
-              status: error.response.status,
-              data: error.response.data || {},
-              suggestion:
-                "Pastikan IP server sudah di-whitelist oleh penyedia API. Jika sudah, coba hubungi penyedia API untuk informasi lebih lanjut.",
-            },
-          });
-        }
-
         // Jika status 401, kemungkinan masalah dengan API key
         if (error.response.status === 401) {
           return res.status(401).json({
@@ -183,6 +172,21 @@ const checkNickname = async (req, res) => {
               data: error.response.data || {},
               suggestion:
                 "Periksa kembali API key dan pastikan masih valid. Jika perlu, minta API key baru dari penyedia API.",
+            },
+          });
+        }
+
+        // Jika status 403, kemungkinan masalah dengan IP whitelist
+        if (error.response.status === 403) {
+          return res.status(403).json({
+            error: "API Access Forbidden",
+            message:
+              "Akses ke API eksternal ditolak. Kemungkinan penyebab: IP server tidak di-whitelist atau format request tidak sesuai.",
+            details: {
+              status: error.response.status,
+              data: error.response.data || {},
+              suggestion:
+                "Pastikan IP server sudah di-whitelist oleh penyedia API. Jika sudah, coba hubungi penyedia API untuk informasi lebih lanjut.",
             },
           });
         }
