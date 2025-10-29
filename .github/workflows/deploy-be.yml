@@ -26,12 +26,9 @@ jobs:
 
       - name: 🗜️ Archive project files
         run: |
-          set +e
-          tar --exclude='./node_modules' \
-              --exclude='./.git' \
-              --exclude='./.github' \
-              --warning=no-file-changed \
-              -czf backend.tar.gz ./
+          mkdir -p build_package
+          cp -r src prisma package.json yarn.lock build_package/
+          tar -czf backend.tar.gz build_package
 
       - name: 🚚 Upload build to VPS (with progress)
         uses: burnett01/rsync-deployments@5.2
