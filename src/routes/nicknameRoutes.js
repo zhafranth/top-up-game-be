@@ -1,5 +1,6 @@
 const express = require("express");
 const { checkNickname } = require("../controllers/nicknameController");
+const guinevereService = require("../services/guinevereService");
 
 const router = express.Router();
 
@@ -75,5 +76,35 @@ const setLongTimeout = (req, res, next) => {
  *                   example: "Internal server error"
  */
 router.post("/check", setLongTimeout, checkNickname);
+router.post("/check-name-guin", setLongTimeout, async (req, res) => {
+  try {
+    const playerId =
+      req.body.playerId ||
+      req.query.playerId ||
+      req.body.target ||
+      req.query.target;
+
+    if (!playerId) {
+      return res
+        .status(400)
+        .json({ error: "Parameter playerId/target wajib diisi" });
+    }
+
+    const result = await guinevereService.checkPlayer(playerId);
+
+    if (!result.status) {
+      return res.status(502).json({
+        error: "Gagal melakukan pengecekan",
+        message: result.msg,
+        details: result.error || null,
+      });
+    }
+
+    return res.status(200).json(result.data);
+  } catch (err) {
+    console.error("Route /check-name-guin error:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 module.exports = router;
