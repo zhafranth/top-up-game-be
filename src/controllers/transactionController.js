@@ -198,33 +198,9 @@ const handleZenospayWebhook = async (req, res) => {
         .json({ error: "Missing reference in webhook payload" });
     }
 
-    // Try to find transaction by our stored merchant_transaction_id first
-    let trx = await prisma.transaction.findFirst({
-      where: { merchant_transaction_id: String(reference) },
-    });
-
-    // If not found, extract numeric transaction id from reference like "TRX-123"
-    let trxId = null;
-    if (!trx) {
-      const idMatch = String(reference).match(/(\d+)/);
-      trxId = idMatch ? parseInt(idMatch[1]) : null;
-      if (trxId) {
-        trx = await prisma.transaction.findUnique({ where: { id: trxId } });
-      }
-    } else {
-      trxId = trx.id;
-    }
-
-    if (!trxId) {
-      return res.status(400).json({ error: "Invalid reference format" });
-    }
-
-    let newStatus = "processing";
-
-    console.log("newStatus", newStatus);
-
+    // Update transaction status to processing
     await prisma.transaction.update({
-      where: { id: trxId },
+      where: { merchant_transaction_id: String(reference) },
       data: { status: "processing" },
     });
 
