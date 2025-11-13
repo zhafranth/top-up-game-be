@@ -88,7 +88,7 @@ const updateTransaction = async (req, res) => {
 // Public endpoint for creating transactions (for customers)
 const createTransaction = async (req, res) => {
   try {
-    const { total_diamond, total_amount, no_wa } = req.body;
+    const { total_diamond, total_amount, no_wa, target_id } = req.body;
 
     // Generate a unique merchant reference up to 64 chars
     const merchantRef = `TRX-${Date.now()}-${Math.random()
@@ -101,6 +101,7 @@ const createTransaction = async (req, res) => {
         total_diamond,
         total_amount,
         no_wa,
+        target_id,
         status: "pending",
         merchant_transaction_id: merchantRef,
       },
@@ -150,12 +151,6 @@ const initiateQrisPayment = async (req, res) => {
       description: `Top Up ${transaction.total_diamond} Diamonds`,
     });
 
-    // Move transaction to processing state (do not overwrite merchant_transaction_id if already set)
-    await prisma.transaction.update({
-      where: { id: trxId },
-      data: { status: "processing" },
-    });
-
     // Try to extract common QR fields per provided sample
     const data = providerResponse?.data || providerResponse || {};
     const qris = {
@@ -194,12 +189,8 @@ const handleZenospayWebhook = async (req, res) => {
 
     const payload = req.body || {};
 
-    console.log("payload", payload);
-
     // Attempt to obtain our original reference and status from multiple possible fields
     const reference = payload.merchant_transaction_id;
-
-    console.log("reference", reference);
 
     if (!reference) {
       return res
@@ -234,7 +225,7 @@ const handleZenospayWebhook = async (req, res) => {
 
     await prisma.transaction.update({
       where: { id: trxId },
-      data: { status: "success" },
+      data: { status: "processing" },
     });
 
     // Acknowledge webhook

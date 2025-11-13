@@ -26,6 +26,7 @@ model Product {
 model Transaction {
   id                      Int               @id @default(autoincrement())
   merchant_transaction_id String            @unique @db.VarChar(64)
+  target_id               Int?
   total_diamond           Int
   total_amount            Int
   status                  TransactionStatus @default(pending)
