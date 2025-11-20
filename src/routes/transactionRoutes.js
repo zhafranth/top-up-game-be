@@ -41,7 +41,11 @@ router.post("/", validate(createTransactionSchema), createTransaction);
 router.get("/status", checkTransactionStatus);
 
 // Admin: list, detail, update
-router.get("/", authenticateToken, getAllTransactions);
+router.get(
+  "/",
+  //  authenticateToken,
+  getAllTransactions
+);
 router.get("/:id", getTransactionById);
 router.put(
   "/:id",
@@ -53,7 +57,7 @@ router.put(
 // Endpoint baru: update status berdasarkan merchant_transaction_id
 router.put(
   "/merchant/status",
-  authenticateToken,
+  // authenticateToken,
   validate(updateTransactionByMerchantSchema),
   updateTransactionByMerchantId
 );
