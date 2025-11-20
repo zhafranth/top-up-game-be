@@ -6,10 +6,12 @@ const {
   createTransaction,
   initiateQrisPayment,
   handleZenospayWebhook,
+  updateTransactionByMerchantId,
+  checkTransactionStatus,
 } = require("../controllers/transactionController");
 const { authenticateToken } = require("../middleware/auth");
-const { validate } = require("../middleware/validation");
-const { updateTransactionSchema } = require("../validators/schemas");
+const { validate, validateQuery } = require("../middleware/validation");
+const { updateTransactionSchema, updateTransactionByMerchantSchema, checkTransactionStatusSchema } = require("../validators/schemas");
 const { z } = require("zod");
 
 const router = express.Router();
@@ -41,10 +43,25 @@ router.put(
   updateTransaction
 );
 
+// Endpoint baru: update status berdasarkan merchant_transaction_id
+router.put(
+  "/merchant/status",
+  authenticateToken,
+  validate(updateTransactionByMerchantSchema),
+  updateTransactionByMerchantId
+);
+
 // Public: initiate QRIS payment via Zenospay for a transaction
 router.post("/:id/pay/qris", initiateQrisPayment);
 
 // Public: Zenospay webhook endpoint
 router.post("/webhook/zenospay", handleZenospayWebhook);
+
+// Public: cek status transaksi via query
+router.get(
+  "/status",
+  validateQuery(checkTransactionStatusSchema),
+  checkTransactionStatus
+);
 
 module.exports = router;

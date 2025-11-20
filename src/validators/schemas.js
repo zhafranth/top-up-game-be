@@ -35,6 +35,18 @@ const updateTransactionSchema = z.object({
   status: z.enum(['pending', 'processing', 'success', 'failed'])
 });
 
+// Tambahan: update status berdasarkan merchant_transaction_id
+const updateTransactionByMerchantSchema = z.object({
+  merchant_transaction_id: z.string().min(1, 'merchant_transaction_id is required'),
+  status: z.enum(['pending', 'processing', 'success', 'failed'])
+});
+
+// Tambahan: check status transaksi via query params
+const checkTransactionStatusSchema = z.object({
+  merchant_transaction_id: z.string().min(1, 'merchant_transaction_id is required'),
+  no_wa: z.string().min(1, 'no_wa is required'),
+});
+
 // User schemas
 const createUserSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
@@ -56,6 +68,8 @@ module.exports = {
   createProductSchema,
   updateProductSchema,
   updateTransactionSchema,
+  updateTransactionByMerchantSchema,
+  checkTransactionStatusSchema,
   createUserSchema,
   updateUserSchema
 };

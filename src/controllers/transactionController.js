@@ -85,6 +85,49 @@ const updateTransaction = async (req, res) => {
   }
 };
 
+// Tambahan: Update status berdasarkan merchant_transaction_id
+const updateTransactionByMerchantId = async (req, res) => {
+  try {
+    const { merchant_transaction_id, status } = req.body;
+
+    // Validasi basic (tambahan selain Zod)
+    if (!merchant_transaction_id || typeof merchant_transaction_id !== "string") {
+      return res.status(400).json({ error: "merchant_transaction_id tidak ditemukan" });
+    }
+    if (!status) {
+      return res.status(400).json({ error: "Status tidak ditemukan" });
+    }
+
+    // Cari transaksi berdasarkan merchant_transaction_id
+    const existingTransaction = await prisma.transaction.findUnique({
+      where: { merchant_transaction_id: String(merchant_transaction_id) },
+    });
+
+    if (!existingTransaction) {
+      return res.status(404).json({ error: "merchant_transaction_id tidak ditemukan" });
+    }
+
+    // Cek jika status sama
+    if (existingTransaction.status === status) {
+      return res.status(400).json({ error: "Status baru sama dengan status saat ini" });
+    }
+
+    // Update status
+    const updated = await prisma.transaction.update({
+      where: { merchant_transaction_id: String(merchant_transaction_id) },
+      data: { status },
+    });
+
+    return res.json({
+      message: "Status transaksi berhasil diupdate",
+      transaction: updated,
+    });
+  } catch (error) {
+    console.error("Update transaction by merchant id error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 // Public endpoint for creating transactions (for customers)
 const createTransaction = async (req, res) => {
   try {
@@ -212,6 +255,47 @@ const handleZenospayWebhook = async (req, res) => {
   }
 };
 
+// Public: cek status transaksi berdasarkan merchant_transaction_id dan no_wa
+const checkTransactionStatus = async (req, res) => {
+  try {
+    const { merchant_transaction_id, no_wa } = req.query;
+
+    // Cari transaksi berdasarkan merchant_transaction_id (unik)
+    const transaction = await prisma.transaction.findUnique({
+      where: { merchant_transaction_id: String(merchant_transaction_id) },
+    });
+
+    if (!transaction) {
+      return res.status(404).json({ error: "Transaksi tidak ditemukan" });
+    }
+
+    // Pastikan no_wa sesuai
+    if (String(transaction.no_wa) !== String(no_wa)) {
+      return res.status(404).json({
+        error:
+          "Transaksi tidak ditemukan untuk merchant_transaction_id dan nomor telepon tersebut",
+      });
+    }
+
+    return res.json({
+      status: transaction.status,
+      transaction: {
+        id: transaction.id,
+        merchant_transaction_id: transaction.merchant_transaction_id,
+        no_wa: transaction.no_wa,
+        total_diamond: transaction.total_diamond,
+        total_amount: transaction.total_amount,
+        target_id: transaction.target_id,
+        created_at: transaction.created_at,
+        updated_at: transaction.updated_at,
+      },
+    });
+  } catch (error) {
+    console.error("Check transaction status error:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 module.exports = {
   getAllTransactions,
   getTransactionById,
@@ -219,4 +303,6 @@ module.exports = {
   createTransaction,
   initiateQrisPayment,
   handleZenospayWebhook,
+  updateTransactionByMerchantId,
+  checkTransactionStatus,
 };
