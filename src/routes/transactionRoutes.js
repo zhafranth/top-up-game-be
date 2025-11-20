@@ -37,6 +37,9 @@ const createTransactionSchema = z.object({
 // Public: create new transaction (no payment yet)
 router.post("/", validate(createTransactionSchema), createTransaction);
 
+// Public: cek status transaksi via query
+router.get("/status", checkTransactionStatus);
+
 // Admin: list, detail, update
 router.get("/", authenticateToken, getAllTransactions);
 router.get("/:id", getTransactionById);
@@ -60,8 +63,5 @@ router.post("/:id/pay/qris", initiateQrisPayment);
 
 // Public: Zenospay webhook endpoint
 router.post("/webhook/zenospay", handleZenospayWebhook);
-
-// Public: cek status transaksi via query
-router.get("/status", checkTransactionStatus);
 
 module.exports = router;
