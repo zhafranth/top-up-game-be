@@ -1,14 +1,63 @@
 const prisma = require("../utils/database");
 const zenospayService = require("../services/zenospayService");
+const { formatDate } = require("../utils/date");
 
 const getAllTransactions = async (req, res) => {
   try {
-    const { page = 1, limit = 10, status } = req.query;
+    const { page = 1, limit = 10, status, start, end } = req.query;
     const skip = (page - 1) * limit;
+
+    // Helper: parse 'YYYY-MM-DD HH:mm:ss' into Date (local time)
+    const parseDateTime = (str) => {
+      if (!str || typeof str !== "string") return null;
+      const m = str.match(
+        /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/
+      );
+      if (!m) return null;
+      const [, yyyy, MM, dd, HH, mm, ss] = m;
+      const y = parseInt(yyyy, 10);
+      const mon = parseInt(MM, 10) - 1; // zero-based
+      const d = parseInt(dd, 10);
+      const h = parseInt(HH, 10);
+      const mi = parseInt(mm, 10);
+      const s = parseInt(ss, 10);
+      const date = new Date(y, mon, d, h, mi, s);
+      return isNaN(date.getTime()) ? null : date;
+    };
 
     const where = {};
     if (status) {
       where.status = status;
+    }
+
+    // Filter by created_at range using start/end
+    let startDate = null;
+    let endDate = null;
+    if (start) {
+      startDate = parseDateTime(start);
+      if (!startDate) {
+        return res.status(400).json({
+          error: "Format 'start' tidak valid. Gunakan format YYYY-MM-DD HH:mm:ss",
+        });
+      }
+    }
+    if (end) {
+      endDate = parseDateTime(end);
+      if (!endDate) {
+        return res.status(400).json({
+          error: "Format 'end' tidak valid. Gunakan format YYYY-MM-DD HH:mm:ss",
+        });
+      }
+    }
+    if (startDate && endDate && endDate < startDate) {
+      return res.status(400).json({
+        error: "Parameter 'end' harus lebih besar atau sama dengan 'start'",
+      });
+    }
+    if (startDate || endDate) {
+      where.created_at = {};
+      if (startDate) where.created_at.gte = startDate;
+      if (endDate) where.created_at.lte = endDate;
     }
 
     const transactions = await prisma.transaction.findMany({
@@ -91,8 +140,13 @@ const updateTransactionByMerchantId = async (req, res) => {
     const { merchant_transaction_id, status } = req.body;
 
     // Validasi basic (tambahan selain Zod)
-    if (!merchant_transaction_id || typeof merchant_transaction_id !== "string") {
-      return res.status(400).json({ error: "merchant_transaction_id tidak ditemukan" });
+    if (
+      !merchant_transaction_id ||
+      typeof merchant_transaction_id !== "string"
+    ) {
+      return res
+        .status(400)
+        .json({ error: "merchant_transaction_id tidak ditemukan" });
     }
     if (!status) {
       return res.status(400).json({ error: "Status tidak ditemukan" });
@@ -104,12 +158,16 @@ const updateTransactionByMerchantId = async (req, res) => {
     });
 
     if (!existingTransaction) {
-      return res.status(404).json({ error: "merchant_transaction_id tidak ditemukan" });
+      return res
+        .status(404)
+        .json({ error: "merchant_transaction_id tidak ditemukan" });
     }
 
     // Cek jika status sama
     if (existingTransaction.status === status) {
-      return res.status(400).json({ error: "Status baru sama dengan status saat ini" });
+      return res
+        .status(400)
+        .json({ error: "Status baru sama dengan status saat ini" });
     }
 
     // Update status
@@ -133,11 +191,10 @@ const createTransaction = async (req, res) => {
   try {
     const { total_diamond, total_amount, no_wa, target_id } = req.body;
 
-    // Generate a unique merchant reference up to 64 chars
-    const merchantRef = `TRX-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2, 10)
-      .toUpperCase()}`;
+    const merchantRef = `TRX-${formatDate(
+      new Date(),
+      "DDMMYYYHHmmss"
+    )}-${Math.random().toString(36).slice(2, 10).toUpperCase()}`;
 
     const transaction = await prisma.transaction.create({
       data: {
