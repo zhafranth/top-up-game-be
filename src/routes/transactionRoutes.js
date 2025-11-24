@@ -32,6 +32,11 @@ const createTransactionSchema = z.object({
     .positive("Total amount must be a positive integer"),
   no_wa: z.string().min(1, "WhatsApp number is required"),
   target_id: z.number().int().positive("Target ID must be a positive integer"),
+  price: z.number().int().positive("Price must be a positive integer"),
+  actual_price: z
+    .number()
+    .int()
+    .positive("Actual price must be a positive integer"),
 });
 
 // Public: create new transaction (no payment yet)

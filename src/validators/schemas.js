@@ -17,6 +17,7 @@ const loginSchema = z.object({
 const createProductSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
   price: z.number().int().positive('Price must be a positive integer'),
+  actual_price: z.number().int().positive('Actual price must be a positive integer'),
   discount: z.number().int().min(0).max(100).optional(),
   is_populer: z.boolean().optional(),
   total_diamond: z.number().int().positive('Total diamond must be a positive integer')

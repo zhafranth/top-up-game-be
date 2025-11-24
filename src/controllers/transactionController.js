@@ -189,7 +189,7 @@ const updateTransactionByMerchantId = async (req, res) => {
 // Public endpoint for creating transactions (for customers)
 const createTransaction = async (req, res) => {
   try {
-    const { total_diamond, total_amount, no_wa, target_id } = req.body;
+    const { total_diamond, total_amount, no_wa, target_id, price, actual_price } = req.body;
 
     const merchantRef = `TRX-${formatDate(
       new Date(),
@@ -202,6 +202,8 @@ const createTransaction = async (req, res) => {
         total_amount,
         no_wa,
         target_id,
+        price,
+        actual_price,
         status: "pending",
         merchant_transaction_id: merchantRef,
       },
