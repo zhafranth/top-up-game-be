@@ -8,6 +8,7 @@ const productRoutes = require("./routes/productRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
 const userRoutes = require("./routes/userRoutes");
 const nicknameRoutes = require("./routes/nicknameRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/nickname", nicknameRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
