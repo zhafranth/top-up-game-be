@@ -10,9 +10,7 @@ const getAllTransactions = async (req, res) => {
     // Helper: parse 'YYYY-MM-DD HH:mm:ss' into Date (local time)
     const parseDateTime = (str) => {
       if (!str || typeof str !== "string") return null;
-      const m = str.match(
-        /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/
-      );
+      const m = str.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);
       if (!m) return null;
       const [, yyyy, MM, dd, HH, mm, ss] = m;
       const y = parseInt(yyyy, 10);
@@ -37,7 +35,8 @@ const getAllTransactions = async (req, res) => {
       startDate = parseDateTime(start);
       if (!startDate) {
         return res.status(400).json({
-          error: "Format 'start' tidak valid. Gunakan format YYYY-MM-DD HH:mm:ss",
+          error:
+            "Format 'start' tidak valid. Gunakan format YYYY-MM-DD HH:mm:ss",
         });
       }
     }
@@ -189,7 +188,27 @@ const updateTransactionByMerchantId = async (req, res) => {
 // Public endpoint for creating transactions (for customers)
 const createTransaction = async (req, res) => {
   try {
-    const { total_diamond, total_amount, no_wa, target_id, price, actual_price } = req.body;
+    const {
+      total_diamond,
+      total_amount,
+      no_wa,
+      target_id,
+      price,
+      actual_price,
+      product_id,
+    } = req.body;
+
+    // Jika product_id dikirim, pastikan product ada
+    let productConnectData = undefined;
+    if (product_id) {
+      const product = await prisma.product.findUnique({
+        where: { id: Number(product_id) },
+      });
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      productConnectData = { connect: { id: Number(product_id) } };
+    }
 
     const merchantRef = `TRX-${formatDate(
       new Date(),
@@ -206,7 +225,9 @@ const createTransaction = async (req, res) => {
         actual_price,
         status: "pending",
         merchant_transaction_id: merchantRef,
+        ...(productConnectData ? { product: productConnectData } : {}),
       },
+      include: { product: true },
     });
 
     res.status(201).json({

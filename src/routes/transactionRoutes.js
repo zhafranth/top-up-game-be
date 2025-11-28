@@ -14,7 +14,6 @@ const { validate, validateQuery } = require("../middleware/validation");
 const {
   updateTransactionSchema,
   updateTransactionByMerchantSchema,
-  checkTransactionStatusSchema,
 } = require("../validators/schemas");
 const { z } = require("zod");
 
@@ -37,6 +36,11 @@ const createTransactionSchema = z.object({
     .number()
     .int()
     .positive("Actual price must be a positive integer"),
+  product_id: z
+    .number()
+    .int()
+    .positive("Product ID must be a positive integer")
+    .optional(),
 });
 
 // Public: create new transaction (no payment yet)

@@ -20,6 +20,7 @@ model Product {
   total_diamond Int
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
+  transactions Transaction[]
 
   @@map("products")
 }
@@ -34,6 +35,8 @@ model Transaction {
   actual_price            Int? @default(0)
   status                  TransactionStatus @default(pending)
   no_wa                   String
+  product_id              Int?
+  product                 Product?          @relation(fields: [product_id], references: [id])
   created_at              DateTime          @default(now())
   updated_at              DateTime          @updatedAt
 
